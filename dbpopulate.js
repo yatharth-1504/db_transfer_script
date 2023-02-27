@@ -800,7 +800,7 @@ const update_parent_cfi = () => {
             else {
               mpath = _res.rows[0].mpath + res.rows[0].mpath;
               client_new.query(
-                `update "User" set "mpath"='${mpath}',"createdById"='${_res.rows[0].id}' where role='cfi@smail.iitm.ac.in'`,
+                `update "User" set "mpath"='${mpath}',"createdById"='${_res.rows[0].id}' where roll='cfi@smail.iitm.ac.in'`,
                 (err, res) => {
                   if (err) console.log(err.stack);
                   else console.log("Parent Updated");
