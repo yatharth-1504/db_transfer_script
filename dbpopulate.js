@@ -755,14 +755,14 @@ const update_mpath_secys = () => {
     if (err) console.log(err.stack);
     else
       client_new.query(
-        `select * from "User" where role='SECRETARY'`,
+        `select * from "User" where role='SECRETARY' AND roll<>'sec_arts@smail.iitm.ac.in'`,
         (err, res) => {
           if (err) console.log(err.stack);
           else
             for (const i of res.rows) {
               mpath = _res.rows[0].mpath + i.mpath;
               client_new.query(
-                `update "User" set "mpath"='${mpath}' where role='SECRETARY'`,
+                `update "User" set "mpath"='${mpath}' where roll='${i.roll}'`,
                 (err, res) => {
                   if (err) console.log(err.stack);
                   else console.log("mpath updated");
@@ -776,7 +776,7 @@ const update_mpath_secys = () => {
 
 const update_createdBy_secys = () => {
   client_new.query(
-    `update "User" set "createdById"='0c428bf6-a1d4-45a7-9288-6c08ea7b570b' where role='SECRETARY'`,
+    `update "User" set "createdById"='0c428bf6-a1d4-45a7-9288-6c08ea7b570b' where role='SECRETARY' AND roll<>'sec_arts@smail.iitm.ac.in'`,
     (err, res) => {
       if (!err) {
         console.log("Parent updated");
@@ -864,6 +864,80 @@ const update_parent_leads = () => {
   );
 };
 
+const update_parent_arts = () => {
+  client_new.query(
+    `select * from "User" where roll='sec_lit@smail.iitm.ac.in'`,
+    (err, _res) => {
+      if (err) console.log(err.stack);
+      else
+        client_new.query(
+          `select * from "User" where roll='sec_arts@smail.iitm.ac.in'`,
+          (err, res) => {
+            if (err) console.log(err.stack);
+            else {
+              mpath = _res.rows[0].mpath + res.rows[0].mpath;
+              client_new.query(
+                `update "User" set "mpath"='${mpath}',"createdById"='${_res.rows[0].id}' where roll='sec_arts@smail.iitm.ac.in'`,
+                (err, res) => {
+                  if (err) console.log(err.stack);
+                  else console.log("Parent Updated");
+                }
+              );
+            }
+          }
+        );
+    }
+  );
+};
+
+const update_parent_leads_cul = () => {
+  client_new.query(
+    `select * from "User" where roll='sec_arts@smail.iitm.ac.in'`,
+    (err, _res) => {
+      if (err) console.log(err.stack);
+      else {
+        const rolls = [
+          "thespian@saarang.org",
+          "spotlight@saarang.org",
+          "finearts@saarang.org",
+          "meraki@saarang.org",
+          "oratoryclub@saarang.org",
+          "classicalarts@saarang.org",
+          "culinary@saarang.org",
+          "designandvfxclub@saarang.org",
+          "musicclub@saarang.org",
+          "wordgames@saarang.org",
+          "nova@saarang.org",
+          "raj@saarang.org",
+          "gaming@saarang.org",
+          "informals@saarang.org",
+          "rheaabu@saarang.org",
+          "writingclub.iitm@gmail.com",
+          "sangam@smail.iitm.ac.in",
+        ];
+        rolls.map((r) => {
+          client_new.query(
+            `select * from "User" where roll='${r}'`,
+            (err, res) => {
+              if (err) console.error(err.stack);
+              else {
+                mpath = _res.rows[0].mpath + res.rows[0].mpath;
+                client_new.query(
+                  `update "User" set "createdById"='${_res.rows[0].id}',"mpath"='${mpath}' where roll='${r}'`,
+                  (err, res) => {
+                    if (err) console.log(err.stack);
+                    else console.log("Parent Updated");
+                  }
+                );
+              }
+            }
+          );
+        });
+      }
+    }
+  );
+};
+
 // populateHostelTable();
 // populateUserTable();
 // populatePermissionTable();
@@ -881,6 +955,8 @@ const update_parent_leads = () => {
 // update_createdBy_secys();
 // update_parent_cfi();
 // update_parent_leads();
+// update_parent_arts();
+update_parent_leads_cul();
 
 client_new.end;
 client_old.end;
