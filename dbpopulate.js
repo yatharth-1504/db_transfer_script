@@ -914,7 +914,142 @@ const update_parent_leads_cul = () => {
           "rheaabu@saarang.org",
           "writingclub.iitm@gmail.com",
           "sangam@smail.iitm.ac.in",
+          "quizclubiitm@gmail.com",
         ];
+        rolls.map((r) => {
+          client_new.query(
+            `select * from "User" where roll='${r}'`,
+            (err, res) => {
+              if (err) console.error(err.stack);
+              else {
+                mpath = _res.rows[0].mpath + res.rows[0].mpath;
+                client_new.query(
+                  `update "User" set "createdById"='${_res.rows[0].id}',"mpath"='${mpath}' where roll='${r}'`,
+                  (err, res) => {
+                    if (err) console.log(err.stack);
+                    else console.log("Parent Updated");
+                  }
+                );
+              }
+            }
+          );
+        });
+      }
+    }
+  );
+};
+
+const update_mpath_leads_gen = () => {
+  client_new.query(
+    `select * from "User" where roll='gen_sec@smail.iitm.ac.in'`,
+    (err, _res) => {
+      if (err) console.log(err.stack);
+      else {
+        const rolls = [
+          "mobops@smail.iitm.ac.in",
+          "saathi_core@smail.iitm.ac.in",
+        ];
+        rolls.map((r) => {
+          client_new.query(
+            `select * from "User" where roll='${r}'`,
+            (err, res) => {
+              if (err) console.error(err.stack);
+              else {
+                mpath = _res.rows[0].mpath + res.rows[0].mpath;
+                client_new.query(
+                  `update "User" set "createdById"='${_res.rows[0].id}',"mpath"='${mpath}' where roll='${r}'`,
+                  (err, res) => {
+                    if (err) console.log(err.stack);
+                    else console.log("Parent Updated");
+                  }
+                );
+              }
+            }
+          );
+        });
+      }
+    }
+  );
+};
+
+const update_mpath_leads_cocur = () => {
+  client_new.query(
+    `select * from "User" where roll='sec_cocur@smail.iitm.ac.in'`,
+    (err, _res) => {
+      if (err) console.log(err.stack);
+      else {
+        const rolls = [
+          "ed19b003@smail.iitm.ac.in",
+          "techsoc@smail.iitm.ac.in",
+          "nirmaan@smail.iitm.ac.in",
+          "head_ecell@smail.iitm.ac.in",
+        ];
+        rolls.map((r) => {
+          client_new.query(
+            `select * from "User" where roll='${r}'`,
+            (err, res) => {
+              if (err) console.error(err.stack);
+              else {
+                mpath = _res.rows[0].mpath + res.rows[0].mpath;
+                client_new.query(
+                  `update "User" set "createdById"='${_res.rows[0].id}',"mpath"='${mpath}' where roll='${r}'`,
+                  (err, res) => {
+                    if (err) console.log(err.stack);
+                    else console.log("Parent Updated");
+                  }
+                );
+              }
+            }
+          );
+        });
+      }
+    }
+  );
+};
+
+const update_mpath_leads_acads = () => {
+  client_new.query(
+    `select * from "User" where roll='sec_acaf@smail.iitm.ac.in'`,
+    (err, _res) => {
+      if (err) console.log(err.stack);
+      else {
+        const rolls = [
+          "placementhead.ug@smail.iitm.ac.in",
+          "cdc@smail.iitm.ac.in",
+          "internshiphead@smail.iitm.ac.in",
+          "caseclub@smail.iitm.ac.in",
+          "financeclub@smail.iitm.ac.in",
+        ];
+        rolls.map((r) => {
+          client_new.query(
+            `select * from "User" where roll='${r}'`,
+            (err, res) => {
+              if (err) console.error(err.stack);
+              else {
+                mpath = _res.rows[0].mpath + res.rows[0].mpath;
+                client_new.query(
+                  `update "User" set "createdById"='${_res.rows[0].id}',"mpath"='${mpath}' where roll='${r}'`,
+                  (err, res) => {
+                    if (err) console.log(err.stack);
+                    else console.log("Parent Updated");
+                  }
+                );
+              }
+            }
+          );
+        });
+      }
+    }
+  );
+};
+
+const update_mpath_leads_sports = () => {
+  client_new.query(
+    `select * from "User" where roll='sec_sprts@smail.iitm.ac.in'`,
+    (err, _res) => {
+      if (err) console.log(err.stack);
+      else {
+        const rolls = ["soc@smail.iitm.ac.in", "nitya@smail.iitm.ac.in"];
         rolls.map((r) => {
           client_new.query(
             `select * from "User" where roll='${r}'`,
@@ -956,7 +1091,11 @@ const update_parent_leads_cul = () => {
 // update_parent_cfi();
 // update_parent_leads();
 // update_parent_arts();
-update_parent_leads_cul();
+// update_parent_leads_cul();
+// update_mpath_leads_gen();
+// update_mpath_leads_cocur()
+// update_mpath_leads_acads();
+// update_mpath_leads_sports();
 
 client_new.end;
 client_old.end;
