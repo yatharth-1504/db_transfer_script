@@ -4,16 +4,16 @@ const client_new = new Client({
   host: "localhost",
   port: 5432,
   user: "postgres",
-  password: "yatharth",
-  database: "instispaceV2",
+  password: "g4IuHZhmrH",
+  database: "instispace_v2",
 });
 
 const client_old = new Client({
   host: "localhost",
   port: 5432,
   user: "postgres",
-  password: "yatharth",
-  database: "instispace_backup",
+  password: "g4IuHZhmrH",
+  database: "instispace",
 });
 
 client_new.connect();
@@ -98,10 +98,10 @@ const populatePermissionTable = () => {
       "Connect",
       "Query",
       "Help",
-      "Review",
-      "Random thought",
-      "LOST",
-      "FOUND",
+      "Survey",
+      "Random Thought",
+      "Lost",
+      "Found",
     ],
     null,
     false,
@@ -130,8 +130,10 @@ const populatePermissionTable = () => {
       "Connect",
       "Query",
       "Help",
-      "Review",
-      "Random thought",
+      "Survey",
+      "Random Thought",
+      "Lost",
+	"Found"
     ],
     ["Hostel", "Contact", "Ameninity"],
     true,
@@ -160,8 +162,8 @@ const populatePermissionTable = () => {
       "Connect",
       "Query",
       "Help",
-      "Review",
-      "Random thought",
+      "Survey",
+      "Random Thought","Lost", "Found"
     ],
     ["Hostel", "Contact", "Ameninity"],
     true,
@@ -191,8 +193,8 @@ const populatePermissionTable = () => {
       "Connect",
       "Query",
       "Help",
-      "Review",
-      "Random thought",
+      "Survey",
+      "Random Thought","Lost","Found"
     ],
     null,
     false,
@@ -222,8 +224,9 @@ const populatePermissionTable = () => {
       "Connect",
       "Query",
       "Help",
-      "Review",
-      "Random thought",
+      "Survey",
+      "Random Thought",
+	    "Lost", "Found"
     ],
     null,
     false,
@@ -248,10 +251,10 @@ const populatePermissionTable = () => {
       "Connect",
       "Query",
       "Help",
-      "Review",
-      "Random thought",
-      "LOST",
-      "FOUND",
+      "Survey",
+      "Random Thought",
+      "Lost",
+      "Found",
     ],
     null,
     false,
@@ -273,13 +276,14 @@ const populatePermissionTable = () => {
     "afb4d34f-cf44-4632-a167-2cdbf3a0f7c0",
     ["HOSTEL_SEC"],
     [
+	    "Event", "Competition", "Recruitment",
       "Announcement",
       "Opportunity",
       "Connect",
       "Query",
       "Help",
-      "Review",
-      "Random thought",
+      "Survey",
+      "Random Thought","Lost","Found"
     ],
     ["Contact", "Ameninity"],
     false,
@@ -344,27 +348,30 @@ const populateTagTable = () => {
   });
 };
 
-populateTagUserTable = () => {
-  client_old.query(`select * from "tag_users_user" `, (err, res) => {
+function delay(time) {
+  return new Promise(resolve => setTimeout(resolve, time));
+} 
+
+populateTagUserTable = async () => {
+  client_old.query(`select * from "tag_users_user" `, async(err, res) => {
     if (!err) {
       console.log(`fetched entries ${res.rows.length}`);
       let count = 0;
-      for (const i of res.rows) {
-        const text =
-          'INSERT INTO "tag_users_user"("tagId","userId") VALUES($1, $2) RETURNING *';
-        const values = [i.tagId, i.userId];
-
-        client_new.query(text, values, (err, res) => {
-          if (err) {
-            console.log(err.stack);
-          } else {
-            count++;
+      for(j=0; j<47;j++){
+	  let str = [];
+	  for(const i of res.rows.slice(j*999, j*999+999)) {
+	  	str = str.concat([`('${i.tagId}', '${i.userId}')`]);
+	  }
+	  try {
+		await client_new.query(`INSERT INTO "tag_users_user" ("tagId", "userId") VALUES ${str.join(', ')}`);
+          } catch(e) {
+		console.log(e);
           }
-        });
+	  await delay(2000);
       }
-      console.log(`retrived entries ${count}`);
+     // console.log(`retrived entries ${count}`);
     } else {
-      console.log(err.message);
+      console.log(err);
     }
   });
 };
@@ -422,16 +429,16 @@ const populatePost_Item = () => {
           i.id,
           i.createdAt,
           i.createdAt,
-          i.contact,
           i.name,
-          i.category,
+          i.category.toLowerCase()+" at "+i.time.getHours()+":"+i.time.getMinutes()+" "+i.time.getDate()+"-"+`${i.time.getMonth()+1}`+"-"+i.time.getFullYear()+` if ${i.category.toLowerCase()==="lost"?"found":"lost"} by you please contact- `+i.contact,
+          i.category == "LOST" ? 'Lost':'Found',
           i.images,
           i.isResolved,
           i.location,
           "POSTED",
           null,
           null,
-          null,
+          new Date(new Date(i.createdAt).setDate(new Date(i.createdAt).getDate() + 7)),
           null,
           i.userId,
         ];
@@ -506,7 +513,7 @@ const populatePosts_Netop = () => {
           i.createdAt,
           i.title,
           i.content,
-          "opportunities",
+          "Opportunity",
           i.photo,
           i.isHidden,
           null,
@@ -750,6 +757,353 @@ const populateReportTable = () => {
   });
 };
 
+const populateCommentTable = () => {
+  client_old.query(`select * from "Comment" `, (err, res) => {
+    if (!err) {
+      console.log(`fetched entries ${res.rows.length}`);
+      let count = 0;
+      for (const i of res.rows) {
+        const text =
+          'INSERT INTO "Comment"("id","content","createdAt", "photo", "postId", "isHidden", "createdById") VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING *';
+        const values = [i.id, i.content, i.createdAt, i.images, i.netopId ? i.netopId : i.queryId, i.isHidden, i.createdById];
+
+        client_new.query(text, values, (err, res) => {
+          if (err) {
+            console.log(err.stack);
+          } else {
+            count++;
+          }
+        });
+      }
+      console.log(`retrived entries ${count}`);
+    } else {
+      console.log(err.message);
+    }
+  });
+};
+
+const update_mpath_secys = () => {
+  client_new.query(`select * from "User" where role='ADMIN'`, (err, _res) => {
+    if (err) console.log(err.stack);
+    else
+      client_new.query(
+        `select * from "User" where role='SECRETARY' AND roll<>'sec_arts@smail.iitm.ac.in'`,
+        (err, res) => {
+          if (err) console.log(err.stack);
+          else
+            for (const i of res.rows) {
+              mpath = _res.rows[0].mpath + i.mpath;
+              client_new.query(
+                `update "User" set "mpath"='${mpath}' where roll='${i.roll}'`,
+                (err, res) => {
+                  if (err) console.log(err.stack);
+                  else console.log("mpath updated");
+                }
+              );
+            }
+        }
+      );
+  });
+};
+
+const update_createdBy_secys = () => {
+  client_new.query(
+    `update "User" set "createdById"='0c428bf6-a1d4-45a7-9288-6c08ea7b570b' where role='SECRETARY' AND roll<>'sec_arts@smail.iitm.ac.in'`,
+    (err, res) => {
+      if (!err) {
+        console.log("Parent updated");
+      } else {
+        console.log(err.stack);
+      }
+    }
+  );
+};
+
+const update_parent_cfi = () => {
+  client_new.query(
+    `select * from "User" where roll='sec_cocur@smail.iitm.ac.in'`,
+    (err, _res) => {
+      if (err) console.log(err.stack);
+      else
+        client_new.query(
+          `select * from "User" where roll='cfi@smail.iitm.ac.in'`,
+          (err, res) => {
+            if (err) console.log(err.stack);
+            else {
+              mpath = _res.rows[0].mpath + res.rows[0].mpath;
+              client_new.query(
+                `update "User" set "mpath"='${mpath}',"createdById"='${_res.rows[0].id}' where roll='cfi@smail.iitm.ac.in'`,
+                (err, res) => {
+                  if (err) console.log(err.stack);
+                  else console.log("Parent Updated");
+                }
+              );
+            }
+          }
+        );
+    }
+  );
+};
+
+const update_parent_leads = () => {
+  client_new.query(
+    `select * from "User" where roll='cfi@smail.iitm.ac.in'`,
+    (err, _res) => {
+      if (err) console.log(err.stack);
+      else {
+        const rolls = [
+          "igem@smail.iitm.ac.in",
+          "envisage@shaastra.org",
+          "thepdc.cfi@gmail.com",
+          "horizon.iitm@gmail.com",
+          "cvigroup.cfi@gmail.com",
+          "elecclub.cfi@gmail.com",
+          "programmingclubiitm@gmail.com",
+          "3dpc.cfi.iitm@gmail.com",
+          "analyticsclub.cfi@gmail.com",
+          "analyticsclubcfi.iitm@gmail.com",
+          "ibotcfi@gmail.com",
+          "cfiwebops@smail.iitm.ac.in",
+          "aeroclub.cfi@gmail.com",
+          "teamsahaayiitm@gmail.com",
+          "raftar@smail.iitm.ac.in",
+          "abhiyaan@smail.iitm.ac.in",
+          "agnirath@smail.iitm.ac.in",
+          "teamanveshak@smail.iitm.ac.in",
+          "avishkarhyperloop@smail.iitm.ac.in",
+          "abhyudayiitm@smail.iitm.ac.in",
+        ];
+        rolls.map((r) => {
+          client_new.query(
+            `select * from "User" where roll='${r}'`,
+            (err, res) => {
+              if (err) console.error(err.stack);
+              else {
+                mpath = _res.rows[0].mpath + res.rows[0].mpath;
+                client_new.query(
+                  `update "User" set "createdById"='${_res.rows[0].id}',"mpath"='${mpath}' where roll='${r}'`,
+                  (err, res) => {
+                    if (err) console.log(err.stack);
+                    else console.log("Parent Updated");
+                  }
+                );
+              }
+            }
+          );
+        });
+      }
+    }
+  );
+};
+
+const update_parent_arts = () => {
+  client_new.query(
+    `select * from "User" where roll='sec_lit@smail.iitm.ac.in'`,
+    (err, _res) => {
+      if (err) console.log(err.stack);
+      else
+        client_new.query(
+          `select * from "User" where roll='sec_arts@smail.iitm.ac.in'`,
+          (err, res) => {
+            if (err) console.log(err.stack);
+            else {
+              mpath = _res.rows[0].mpath + res.rows[0].mpath;
+              client_new.query(
+                `update "User" set "mpath"='${mpath}',"createdById"='${_res.rows[0].id}' where roll='sec_arts@smail.iitm.ac.in'`,
+                (err, res) => {
+                  if (err) console.log(err.stack);
+                  else console.log("Parent Updated");
+                }
+              );
+            }
+          }
+        );
+    }
+  );
+};
+
+const update_parent_leads_cul = () => {
+  client_new.query(
+    `select * from "User" where roll='sec_arts@smail.iitm.ac.in'`,
+    (err, _res) => {
+      if (err) console.log(err.stack);
+      else {
+        const rolls = [
+          "thespian@saarang.org",
+          "spotlight@saarang.org",
+          "finearts@saarang.org",
+          "meraki@saarang.org",
+          "oratoryclub@saarang.org",
+          "classicalarts@saarang.org",
+          "culinary@saarang.org",
+          "designandvfxclub@saarang.org",
+          "musicclub@saarang.org",
+          "wordgames@saarang.org",
+          "nova@saarang.org",
+          "raj@saarang.org",
+          "gaming@saarang.org",
+          "informals@saarang.org",
+          "rheaabu@saarang.org",
+          "writingclub.iitm@gmail.com",
+          "sangam@smail.iitm.ac.in",
+          "quizclubiitm@gmail.com",
+        ];
+        rolls.map((r) => {
+          client_new.query(
+            `select * from "User" where roll='${r}'`,
+            (err, res) => {
+              if (err) console.error(err.stack);
+              else {
+                mpath = _res.rows[0].mpath + res.rows[0].mpath;
+                client_new.query(
+                  `update "User" set "createdById"='${_res.rows[0].id}',"mpath"='${mpath}' where roll='${r}'`,
+                  (err, res) => {
+                    if (err) console.log(err.stack);
+                    else console.log("Parent Updated");
+                  }
+                );
+              }
+            }
+          );
+        });
+      }
+    }
+  );
+};
+
+const update_mpath_leads_gen = () => {
+  client_new.query(
+    `select * from "User" where roll='gen_sec@smail.iitm.ac.in'`,
+    (err, _res) => {
+      if (err) console.log(err.stack);
+      else {
+        const rolls = [
+          "mobops@smail.iitm.ac.in",
+          "saathi_core@smail.iitm.ac.in",
+        ];
+        rolls.map((r) => {
+          client_new.query(
+            `select * from "User" where roll='${r}'`,
+            (err, res) => {
+              if (err) console.error(err.stack);
+              else {
+                mpath = _res.rows[0].mpath + res.rows[0].mpath;
+                client_new.query(
+                  `update "User" set "createdById"='${_res.rows[0].id}',"mpath"='${mpath}' where roll='${r}'`,
+                  (err, res) => {
+                    if (err) console.log(err.stack);
+                    else console.log("Parent Updated");
+                  }
+                );
+              }
+            }
+          );
+        });
+      }
+    }
+  );
+};
+
+const update_mpath_leads_cocur = () => {
+  client_new.query(
+    `select * from "User" where roll='sec_cocur@smail.iitm.ac.in'`,
+    (err, _res) => {
+      if (err) console.log(err.stack);
+      else {
+        const rolls = [
+          "ed19b003@smail.iitm.ac.in",
+          "techsoc@smail.iitm.ac.in",
+          "nirmaan@smail.iitm.ac.in",
+          "head_ecell@smail.iitm.ac.in",
+        ];
+        rolls.map((r) => {
+          client_new.query(
+            `select * from "User" where roll='${r}'`,
+            (err, res) => {
+              if (err) console.error(err.stack);
+              else {
+                mpath = _res.rows[0].mpath + res.rows[0].mpath;
+                client_new.query(
+                  `update "User" set "createdById"='${_res.rows[0].id}',"mpath"='${mpath}' where roll='${r}'`,
+                  (err, res) => {
+                    if (err) console.log(err.stack);
+                    else console.log("Parent Updated");
+                  }
+                );
+              }
+            }
+          );
+        });
+      }
+    }
+  );
+};
+
+const update_mpath_leads_acads = () => {
+  client_new.query(
+    `select * from "User" where roll='sec_acaf@smail.iitm.ac.in'`,
+    (err, _res) => {
+      if (err) console.log(err.stack);
+      else {
+        const rolls = [
+          "placementhead.ug@smail.iitm.ac.in",
+          "cdc@smail.iitm.ac.in",
+          "internshiphead@smail.iitm.ac.in",
+          "caseclub@smail.iitm.ac.in",
+          "financeclub@smail.iitm.ac.in",
+        ];
+        rolls.map((r) => {
+          client_new.query(
+            `select * from "User" where roll='${r}'`,
+            (err, res) => {
+              if (err) console.error(err.stack);
+              else {
+                mpath = _res.rows[0].mpath + res.rows[0].mpath;
+                client_new.query(
+                  `update "User" set "createdById"='${_res.rows[0].id}',"mpath"='${mpath}' where roll='${r}'`,
+                  (err, res) => {
+                    if (err) console.log(err.stack);
+                    else console.log("Parent Updated");
+                  }
+                );
+              }
+            }
+          );
+        });
+      }
+    }
+  );
+};
+
+const update_mpath_leads_sports = () => {
+  client_new.query(
+    `select * from "User" where roll='sec_sprts@smail.iitm.ac.in'`,
+    (err, _res) => {
+      if (err) console.log(err.stack);
+      else {
+        const rolls = ["soc@smail.iitm.ac.in", "nitya@smail.iitm.ac.in"];
+        rolls.map((r) => {
+          client_new.query(
+            `select * from "User" where roll='${r}'`,
+            (err, res) => {
+              if (err) console.error(err.stack);
+              else {
+                mpath = _res.rows[0].mpath + res.rows[0].mpath;
+                client_new.query(
+                  `update "User" set "createdById"='${_res.rows[0].id}',"mpath"='${mpath}' where roll='${r}'`,
+                  (err, res) => {
+                    if (err) console.log(err.stack);
+                    else console.log("Parent Updated");
+                  }
+                );
+              }
+            }
+          );
+        });
+      }
+    }
+  );
+};
 // populateHostelTable();
 // populateUserTable();
 // populatePermissionTable();
@@ -763,6 +1117,23 @@ const populateReportTable = () => {
 // populatePost_Rel();
 // populateReportReasons();
 // populateReportTable();
+// populateCommentTable();
+
+// update_mpath_secys();
+// update_createdBy_secys();
+// update_parent_cfi();
+// update_parent_leads();
+
+// update_mpath_secys();
+// update_createdBy_secys();
+// update_parent_cfi();
+// update_parent_leads();
+// update_parent_arts();
+// update_parent_leads_cul(); 
+// update_mpath_leads_gen();
+// update_mpath_leads_cocur()
+// update_mpath_leads_acads();
+// update_mpath_leads_sports();
 
 client_new.end;
 client_old.end;
